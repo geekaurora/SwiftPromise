@@ -20,6 +20,7 @@ import Foundation
       print(error)
     }
  ```
+ If `then()` returns new Promise, will execute it correspondingly.
  
  2. await():
  ```
