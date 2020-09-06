@@ -6,15 +6,14 @@ final class SwiftPromiseTests: XCTestCase {
   static let result = "PromiseResult"
   static let error: Error? = NSError(domain: "Error", code: 999, userInfo: nil)
   static let asyncDelay: TimeInterval = 0.1
+  static let fulfillWaitInterval: TimeInterval = 20
+
+  // MARK: - Test resolve()/reject()
   
   func testResolve() {
-    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(20, testCase: self)
+    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
     // Init promise.
-    let promise = Promise<String> { (resolve, reject) in
-      self.delayAsync {
-        resolve(Self.result)
-      }
-    }
+    let promise = createPromise()
     // Test then().
     promise.then { (result) in
       XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
@@ -26,13 +25,9 @@ final class SwiftPromiseTests: XCTestCase {
   }
   
   func testReject() {
-    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(20, testCase: self)
+    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
     // Init promise.
-    let promise = Promise<String> { (resolve, reject) in
-      self.delayAsync {
-        reject(Self.error)
-      }
-    }
+    let promise = createPromise(shouldReject: true)
     
     // Test catch().
     promise.then { result in
@@ -48,14 +43,34 @@ final class SwiftPromiseTests: XCTestCase {
     waitExpectation()
   }
   
-  func testAwaitWithResolve() {
-    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(20, testCase: self)
+  func testChainingThenResolve() {
+    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
     // Init promise.
-    let promise = Promise<String> { (resolve, reject) in
-      self.delayAsync {
-        resolve(Self.result)
-      }
+    let promise = createPromise()
+    
+    // Test chaining then().
+    promise
+      .then { (result) in
+        XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
+        return self.createPromise()
     }
+    .then { (result) in
+      XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
+      expectation.fulfill()
+      return nil
+    }
+    
+    // Wait for asynchronous result.
+    waitExpectation()
+  }
+  
+  
+  // MARK: - Test await()
+  
+  func testAwaitWithResolve() {
+    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
+    // Init promise.
+    let promise = createPromise()
     // Test await().
     let result = promise.await()
     XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
@@ -65,13 +80,9 @@ final class SwiftPromiseTests: XCTestCase {
   }
   
   func testAwaitWithReject() {
-    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(20, testCase: self)
+    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
     // Init promise.
-    let promise = Promise<String> { (resolve, reject) in
-      self.delayAsync {
-        reject(Self.error)
-      }
-    }
+    let promise = createPromise(shouldReject: true)
     // Test await().
     let result = promise.await()
     XCTAssertTrue(result == nil, "Actual result = \(result); Expected result = nil")
@@ -81,7 +92,23 @@ final class SwiftPromiseTests: XCTestCase {
   }
 }
 
+// MARK: - Convenience methods
+
 private extension SwiftPromiseTests {
+  
+  func createPromise(shouldReject: Bool = false) -> Promise<String> {
+    let promise = Promise<String> { (resolve, reject) in
+      self.delayAsync {
+        if (shouldReject) {
+          reject(Self.error)
+        } else {
+          resolve(Self.result)
+        }
+      }
+    }
+    return promise
+  }
+  
   func delayAsync(_ closure: @escaping () -> Void) {
     DispatchQueue.global().asyncAfter(deadline: .now() + Self.asyncDelay, execute: closure)
   }
