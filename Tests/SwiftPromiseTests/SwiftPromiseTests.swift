@@ -19,6 +19,7 @@ final class SwiftPromiseTests: XCTestCase {
     promise.then { (result) in
       XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
       expectation.fulfill()
+      return nil
     }
     // Wait for asynchronous result.
     waitExpectation()
@@ -36,6 +37,7 @@ final class SwiftPromiseTests: XCTestCase {
     // Test catch().
     promise.then { result in
       XCTAssert(false, "then() shouldn't be called.")
+      return nil
     }
     .catch{ error in
       print("error = \(error);")

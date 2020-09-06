@@ -42,8 +42,8 @@ public class Promise<Result> {
   private var error: Error?
   
   /// Then callback closure.
-  public typealias Then = (Result?) -> Void
-  private var then: Then?
+  public typealias Then<T> = (T?) -> Promise<T>?
+  private var then: Then<Result>?
   /// Catch callback closure.
   public typealias Catch = (Error?) -> Void
   private var `catch`: Catch?
@@ -59,7 +59,7 @@ public class Promise<Result> {
   
   /// `then` function that will be called on `resolve()`.
   @discardableResult
-  public func then(_ then: @escaping Then) -> Promise<Result> {
+  public func then(_ then: @escaping Then<Result>) -> Promise<Result> {
     // Store `then`.
     self.then = then
     // Start `execution`.
@@ -94,7 +94,11 @@ private extension Promise {
     self.result = result
     if (!signalIfNeeded()) {
       // Call `then` with `result`.
-      then?(result)
+      //
+      // - Note: If `then()` returns new Promise, execute it.
+      if let newPromise = then?(result) {
+        newPromise.execution(resolve, reject)
+      }
     }
   }
   
