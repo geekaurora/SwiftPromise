@@ -91,17 +91,17 @@ public class Promise<Result> {
 private extension Promise {
   /// Function will be called on execution success.
   func resolve(_ result: Result?) {
-    // Call `then` with `result`.
     self.result = result
     if (!signalIfNeeded()) {
+      // Call `then` with `result`.
       then?(result)
     }
   }
   
   /// Function will be called on execution failure.
   func reject(_ error: Error?) {
-    // Call `then` with `error`.
     if (!signalIfNeeded()) {
+      // Call `then` with `error`.
       `catch`?(error)
     }
   }
