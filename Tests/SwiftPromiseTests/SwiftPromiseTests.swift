@@ -7,7 +7,7 @@ final class SwiftPromiseTests: XCTestCase {
   static let error: Error? = NSError(domain: "Error", code: 999, userInfo: nil)
   static let asyncDelay: TimeInterval = 0.1
   static let fulfillWaitInterval: TimeInterval = 20
-
+  
   // MARK: - Test resolve()/reject()
   
   func testResolve() {
@@ -34,8 +34,7 @@ final class SwiftPromiseTests: XCTestCase {
       XCTAssert(false, "then() shouldn't be called.")
       return nil
     }
-    .catch{ error in
-      print("error = \(error);")
+    .catch { error in
       XCTAssertTrue(error as AnyObject === Self.error as AnyObject , "Actual result = \(error); Expected result = \(Self.error)")
       expectation.fulfill()
     }
@@ -64,6 +63,41 @@ final class SwiftPromiseTests: XCTestCase {
     waitExpectation()
   }
   
+  // MARK: - Test all()
+  
+  func testAllPromisesResolve() {
+    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
+    // Init promise.
+    let promises = [createPromise(), createPromise()]
+        
+    // Test then().
+    Promise.all(promises).then { (result) in
+      XCTAssertTrue(
+        result == Promise<Any>.allPromisesSuccessString,
+        "Actual result = \(result); Expected result = \(Promise<Any>.allPromisesSuccessString)")
+      expectation.fulfill()
+      return nil
+    }
+    // Wait for asynchronous result.
+    waitExpectation()
+  }
+  
+  func testAllPromisesReject() {
+    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
+    // Init promise.
+    let promises = [createPromise(), createPromise(), createPromise(shouldReject: true)]
+    
+    // Test then().
+    Promise.all(promises).then { _ in
+      XCTAssertTrue(false, "then() shouldn't be called.")
+      return nil
+    }.catch { error in
+      XCTAssertTrue(error as AnyObject === Self.error as AnyObject , "Actual result = \(error); Expected result = \(Self.error)")
+      expectation.fulfill()
+    }
+    // Wait for asynchronous result.
+    waitExpectation()
+  }
   
   // MARK: - Test await()
   

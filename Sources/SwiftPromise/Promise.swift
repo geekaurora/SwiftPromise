@@ -7,25 +7,37 @@ import Foundation
  
  1. then()/catch():
  ```
-    let promise = Promise<String> { (resolve, reject) in
-      self.delayAsync {
-        resolve("result")
-      }
-    }
-    promise
-    .then { result in
-      print(result)
-    }
-    .catch{ error in
-      print(error)
-    }
+ let promise = Promise<String> { (resolve, reject) in
+   self.delayAsync {
+    resolve("result")
+   }
+ }
+ promise
+ .then { result in
+  print(result)
+ }
+ .catch { error in
+  print(error)
+ }
  ```
- If `then()` returns new Promise, will execute it correspondingly.
+ If `then()` returns a new Promise, it will be executed correspondingly.
  
  2. await():
  ```
-    let result = promise.await()
-    print(result)
+ let result = promise.await()
+ print(result)
+ ```
+ 
+ 3. all():
+ ```
+ let promises = [createPromise(), createPromise(), createPromise()]
+ 
+ Promise.all(promises)
+ .then { _ in
+   print("Completed all promises successfully.")
+ }.catch { error in
+   print("Failed to execute promises. Error - \(error)")
+ }
  ```
  */
 public class Promise<Result> {
@@ -51,6 +63,10 @@ public class Promise<Result> {
   
   /// Semaphore for async/await signal.
   private var semaphore: DispatchSemaphore?
+  
+  public static var allPromisesSuccessString: String {
+    return "Succeed to execute all promises."
+  }
   
   /// Initialize with `execution` closure.
   /// Call `resolve()` on success, and call `reject()` on failure.
@@ -85,6 +101,35 @@ public class Promise<Result> {
     waitForSignal()
     return self.result
   }
+  
+  /// Returns when all `promises` complete.
+  public static func all(_ promises: [Promise]) -> Promise<String> {
+    // 0. Create promise that executes all `promises`.
+    let allPromise = Promise<String> { (resolve, reject) in
+      let dispatchGroup = DispatchGroup()
+      
+      // 1. Loop through all promises and execute.
+      for promise in promises {
+        dispatchGroup.enter()
+        promise.then { res in
+          dispatchGroup.leave()
+          return nil
+        }.catch { err in
+          // 2. Exit on any failure of promises
+          reject(err)
+          return
+        }
+      }
+      
+      // 3. Notify after all `promises` complete.
+      dispatchGroup.notify(queue: .main) {
+        resolve(allPromisesSuccessString)
+      }
+    }
+    
+    // 4. Return `allPromise`.
+    return allPromise
+  }
 }
 
 // MARK: - Resolve / Reject
@@ -96,7 +141,7 @@ private extension Promise {
     if (!signalIfNeeded()) {
       // Call `then` with `result`.
       //
-      // - Note: If `then()` returns new Promise, execute it.
+      // - Note: If `then()` returns a new Promise, it will be executed correspondingly.
       if let newPromise = then?(result) {
         newPromise.execution(resolve, reject)
       }
