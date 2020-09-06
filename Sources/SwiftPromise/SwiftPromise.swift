@@ -12,7 +12,8 @@ import Foundation
         resolve("result")
       }
     }
-    promise.then { result in
+    promise
+    .then { result in
       print(result)
     }
     .catch{ error in
@@ -47,7 +48,7 @@ public class Promise<Result> {
   public typealias Catch = (Error?) -> Void
   private var `catch`: Catch?
   
-  /// The semaphore for async/await signal.
+  /// Semaphore for async/await signal.
   private var semaphore: DispatchSemaphore?
   
   /// Initialize with `execution` closure.
@@ -75,11 +76,10 @@ public class Promise<Result> {
   
   /// Execute synchronously on the current thread and return result.
   ///
-  /// - Note: execution shouldn't be on the same thread, otherwise it will cause deadlock.
+  /// - Note: execution shouldn't be on the same thread as `await()`, otherwise it will cause deadlock.
   public func await() -> Result? {
     // Start `execution`.
     execution(resolve, reject)
-    
     // Wait on the current thread until get result or error.
     waitForSignal()
     return self.result
@@ -116,9 +116,9 @@ private extension Promise {
   }
   
   func signalIfNeeded() -> Bool {
-    let hasLock = (semaphore != nil)
+    let shouldSendSignal = (semaphore != nil)
     semaphore?.signal()
     semaphore = nil
-    return hasLock
+    return shouldSendSignal
   }
 }
