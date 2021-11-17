@@ -138,7 +138,7 @@ private extension Promise {
   /// Function will be called on execution success.
   func resolve(_ result: Result?) {
     self.result = result
-    if (!signalIfNeeded()) {
+    if !signalIfNeeded() {
       // Call `then` with `result`.
       //
       // - Note: If `then()` returns a new Promise, it will be executed correspondingly.
@@ -150,7 +150,7 @@ private extension Promise {
   
   /// Function will be called on execution failure.
   func reject(_ error: Error?) {
-    if (!signalIfNeeded()) {
+    if !signalIfNeeded() {
       // Call `then` with `error`.
       `catch`?(error)
     }
