@@ -59,10 +59,10 @@ public class Promise<Result> {
   /// Then callback closure.
   // public typealias Then<T> = (T?) -> Promise<T>?
   public typealias Then<T> = (T?) -> T?
-  private var then: Then<Result>?
+  private var thenClosure: Then<Result>?
   /// Catch callback closure.
   public typealias Catch = (Error?) -> Void
-  private var `catch`: Catch?
+  private var catchClosure: Catch?
   
   /// Semaphore for async/await signal.
   private var semaphore: DispatchSemaphore?
@@ -79,9 +79,9 @@ public class Promise<Result> {
   
   /// `then` function that will be called on `resolve()`.
   @discardableResult
-  public func then(_ then: @escaping Then<Result>) -> Promise<Result> {
+  public func then(_ thenClosure: @escaping Then<Result>) -> Promise<Result> {
     // Store `then`.
-    self.then = then
+    self.thenClosure = thenClosure
     // Start `execution`.
     execution(resolve, reject)
     return self
@@ -89,8 +89,8 @@ public class Promise<Result> {
   
   /// `catch` function that will be called on `reject()`.
   @discardableResult
-  public func `catch`(_ `catch`: @escaping Catch) -> Promise<Result> {
-    self.`catch` = `catch`
+  public func `catch`(_ catchClosure: @escaping Catch) -> Promise<Result> {
+    self.catchClosure = catchClosure
     return self
   }
   
@@ -150,7 +150,7 @@ private extension Promise {
       // Call `then` with `self.result`.
       //
       // - Note: If `then()` returns a new result, update self's `result` - which will be used for the next `then()`.
-      self.result = then?(self.result)
+      self.result = thenClosure?(self.result)
       // newPromise.execution(resolve, reject)
     }
   }
@@ -159,7 +159,7 @@ private extension Promise {
   func reject(_ error: Error?) {
     if !signalIfNeeded() {
       // Call `then` with `error`.
-      `catch`?(error)
+      catchClosure?(error)
     }
   }
 }
