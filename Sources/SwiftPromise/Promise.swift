@@ -51,6 +51,8 @@ public class Promise<Result> {
   
   /// Result of execution.
   private var result: Result?
+  /// Indicates whether result has been initialized.
+  private var isResultInitialized = false
   /// Error of execution.
   private var error: Error?
   
@@ -138,8 +140,10 @@ public class Promise<Result> {
 private extension Promise {
   /// Function will be called on execution success.
   func resolve(_ result: Result?) {
-    if self.result == nil {
+    if !isResultInitialized {
+      // Only update `self.result` by `resolve()` for the first time, after that `self.result` will be updated by each `then` block.
       self.result = result
+      isResultInitialized = true
     }
 
     if !signalIfNeeded() {
