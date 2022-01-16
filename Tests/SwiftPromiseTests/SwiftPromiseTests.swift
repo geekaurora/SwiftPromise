@@ -58,7 +58,7 @@ final class SwiftPromiseTests: XCTestCase {
         // return self.createPromise(result: Self.chainingThenPromiseResult)
         return Self.chainingThenPromiseResult
     }
-    // * Wrong: will call the same promise. as then() method returns `self`.
+    // * Note: next then() will call the same promise, as prev then() method returns `self`.
     .then { (result) in
       XCTAssertTrue(result == Self.chainingThenPromiseResult, "Actual result = \(result); Expected result = \(Self.chainingThenPromiseResult)")
       expectation.fulfill()
