@@ -146,10 +146,8 @@ private extension Promise {
       // Call `then` with `self.result`.
       //
       // - Note: If `then()` returns a new result, update self's `result` - which will be used for the next `then()`.
-      if let newResult = then?(self.result) {
-        self.result = newResult
-        // newPromise.execution(resolve, reject)
-      }
+      self.result = then?(self.result)
+      // newPromise.execution(resolve, reject)
     }
   }
   
