@@ -51,11 +51,14 @@ public class Promise<Result> {
   
   /// Result of execution.
   private var result: Result?
+  /// Indicates whether result has been initialized.
+  private var isResultInitialized = false
   /// Error of execution.
   private var error: Error?
   
   /// Then callback closure.
-  public typealias Then<T> = (T?) -> Promise<T>?
+  // public typealias Then<T> = (T?) -> Promise<T>?
+  public typealias Then<T> = (T?) -> T?
   private var then: Then<Result>?
   /// Catch callback closure.
   public typealias Catch = (Error?) -> Void
@@ -137,14 +140,18 @@ public class Promise<Result> {
 private extension Promise {
   /// Function will be called on execution success.
   func resolve(_ result: Result?) {
-    self.result = result
+    if !isResultInitialized {
+      // Only update `self.result` by `resolve()` for the first time, after that `self.result` will be updated by each `then` block.
+      self.result = result
+      isResultInitialized = true
+    }
+
     if !signalIfNeeded() {
-      // Call `then` with `result`.
+      // Call `then` with `self.result`.
       //
-      // - Note: If `then()` returns a new Promise, it will be executed correspondingly.
-      if let newPromise = then?(result) {
-        newPromise.execution(resolve, reject)
-      }
+      // - Note: If `then()` returns a new result, update self's `result` - which will be used for the next `then()`.
+      self.result = then?(self.result)
+      // newPromise.execution(resolve, reject)
     }
   }
   

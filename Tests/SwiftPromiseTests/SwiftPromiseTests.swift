@@ -4,11 +4,12 @@ import CZTestUtils
 
 final class SwiftPromiseTests: XCTestCase {
   static let result = "PromiseResult"
+  static let chainingThenPromiseResult = "chainingThenPromiseResult"
   static let error: Error? = NSError(domain: "Error", code: 999, userInfo: nil)
   static let asyncDelay: TimeInterval = 0.1
-  static let fulfillWaitInterval: TimeInterval = 20
+  static let fulfillWaitInterval: TimeInterval = 2
   
-  // MARK: - Test resolve()/reject()
+  // MARK: - Test resolve() / reject()
   
   func testResolve() {
     let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
@@ -41,20 +42,24 @@ final class SwiftPromiseTests: XCTestCase {
     // Wait for asynchronous result.
     waitExpectation()
   }
-  
+
+  /**
+   Test chaining multitple `then`.
+   */
   func testChainingThenResolve() {
     let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
     // Init promise.
-    let promise = createPromise()
+    let promise = createPromise(shouldAsync: false)
     
     // Test chaining then().
     promise
       .then { (result) in
         XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
-        return self.createPromise()
+        return Self.chainingThenPromiseResult
     }
+    // * Note: next then() will call the same promise, as prev then() method returns `self`.
     .then { (result) in
-      XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
+      XCTAssertTrue(result == Self.chainingThenPromiseResult, "Actual result = \(result); Expected result = \(Self.chainingThenPromiseResult)")
       expectation.fulfill()
       return nil
     }
@@ -62,7 +67,7 @@ final class SwiftPromiseTests: XCTestCase {
     // Wait for asynchronous result.
     waitExpectation()
   }
-  
+
   // MARK: - Test all()
   
   func testAllPromisesResolve() {
@@ -129,10 +134,10 @@ final class SwiftPromiseTests: XCTestCase {
 // MARK: - Convenience methods
 
 private extension SwiftPromiseTests {
-  
-  func createPromise(shouldReject: Bool = false) -> Promise<String> {
+
+  func createPromise(shouldAsync: Bool = true, shouldReject: Bool = false) -> Promise<String> {
     let promise = Promise<String> { (resolve, reject) in
-      self.delayAsync {
+      self.delayAsync(shouldAsync: shouldAsync) {
         if (shouldReject) {
           reject(Self.error)
         } else {
@@ -143,7 +148,11 @@ private extension SwiftPromiseTests {
     return promise
   }
   
-  func delayAsync(_ closure: @escaping () -> Void) {
-    DispatchQueue.global().asyncAfter(deadline: .now() + Self.asyncDelay, execute: closure)
+  func delayAsync(shouldAsync: Bool = true, _ closure: @escaping () -> Void) {
+    if shouldAsync {
+      DispatchQueue.global().asyncAfter(deadline: .now() + Self.asyncDelay, execute: closure)
+    } else {
+      closure()
+    }
   }
 }
