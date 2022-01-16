@@ -138,14 +138,17 @@ public class Promise<Result> {
 private extension Promise {
   /// Function will be called on execution success.
   func resolve(_ result: Result?) {
-    self.result = result
+    if self.result == nil {
+      self.result = result
+    }
+
     if !signalIfNeeded() {
-      // Call `then` with `result`.
+      // Call `then` with `self.result`.
       //
       // - Note: If `then()` returns a new result, update self's `result` - which will be used for the next `then()`.
-      if let newResult = then?(result) {
-        // newPromise.execution(resolve, reject)
+      if let newResult = then?(self.result) {
         self.result = newResult
+        // newPromise.execution(resolve, reject)
       }
     }
   }
