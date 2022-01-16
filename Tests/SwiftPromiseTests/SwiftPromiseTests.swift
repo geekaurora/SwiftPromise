@@ -44,7 +44,7 @@ final class SwiftPromiseTests: XCTestCase {
   }
 
   /**
-   Test chaining multitple`then`.
+   Test chaining multitple `then`.
    */
   func testChainingThenResolve() {
     let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
@@ -55,7 +55,6 @@ final class SwiftPromiseTests: XCTestCase {
     promise
       .then { (result) in
         XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
-        // return self.createPromise(result: Self.chainingThenPromiseResult)
         return Self.chainingThenPromiseResult
     }
     // * Note: next then() will call the same promise, as prev then() method returns `self`.
