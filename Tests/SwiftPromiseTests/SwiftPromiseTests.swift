@@ -49,7 +49,7 @@ final class SwiftPromiseTests: XCTestCase {
   func testChainingThenResolve() {
     let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
     // Init promise.
-    let promise = createPromise(shouldAsync: true)
+    let promise = createPromise(shouldAsync: false)
     
     // Test chaining then().
     promise
