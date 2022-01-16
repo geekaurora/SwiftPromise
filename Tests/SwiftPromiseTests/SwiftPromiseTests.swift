@@ -7,7 +7,7 @@ final class SwiftPromiseTests: XCTestCase {
   static let chainingThenPromiseResult = "chainingThenPromiseResult"
   static let error: Error? = NSError(domain: "Error", code: 999, userInfo: nil)
   static let asyncDelay: TimeInterval = 0.1
-  static let fulfillWaitInterval: TimeInterval = 20
+  static let fulfillWaitInterval: TimeInterval = 2
   
   // MARK: - Test resolve() / reject()
   
@@ -49,7 +49,7 @@ final class SwiftPromiseTests: XCTestCase {
   func testChainingThenResolve() {
     let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
     // Init promise.
-    let promise = createPromise()
+    let promise = createPromise(shouldAsync: true)
     
     // Test chaining then().
     promise
@@ -136,9 +136,9 @@ final class SwiftPromiseTests: XCTestCase {
 
 private extension SwiftPromiseTests {
 
-  func createPromise(shouldReject: Bool = false) -> Promise<String> {
+  func createPromise(shouldAsync: Bool = true, shouldReject: Bool = false) -> Promise<String> {
     let promise = Promise<String> { (resolve, reject) in
-      self.delayAsync {
+      self.delayAsync(shouldAsync: shouldAsync) {
         if (shouldReject) {
           reject(Self.error)
         } else {
@@ -149,8 +149,11 @@ private extension SwiftPromiseTests {
     return promise
   }
   
-  func delayAsync(_ closure: @escaping () -> Void) {
-    closure()
-    // DispatchQueue.global().asyncAfter(deadline: .now() + Self.asyncDelay, execute: closure)
+  func delayAsync(shouldAsync: Bool = true, _ closure: @escaping () -> Void) {
+    if shouldAsync {
+      DispatchQueue.global().asyncAfter(deadline: .now() + Self.asyncDelay, execute: closure)
+    } else {
+      closure()
+    }
   }
 }
