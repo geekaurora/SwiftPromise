@@ -55,7 +55,8 @@ public class Promise<Result> {
   private var error: Error?
   
   /// Then callback closure.
-  public typealias Then<T> = (T?) -> Promise<T>?
+  // public typealias Then<T> = (T?) -> Promise<T>?
+  public typealias Then<T> = (T?) -> T?
   private var then: Then<Result>?
   /// Catch callback closure.
   public typealias Catch = (Error?) -> Void
@@ -141,9 +142,10 @@ private extension Promise {
     if !signalIfNeeded() {
       // Call `then` with `result`.
       //
-      // - Note: If `then()` returns a new Promise, it will be executed correspondingly.
-      if let newPromise = then?(result) {
-        newPromise.execution(resolve, reject)
+      // - Note: If `then()` returns a new result, update self's `result` - which will be used for the next `then()`.
+      if let newResult = then?(result) {
+        // newPromise.execution(resolve, reject)
+        self.result = newResult
       }
     }
   }
