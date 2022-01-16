@@ -136,13 +136,13 @@ final class SwiftPromiseTests: XCTestCase {
 
 private extension SwiftPromiseTests {
 
-  func createPromise(result: String = SwiftPromiseTests.result, shouldReject: Bool = false) -> Promise<String> {
+  func createPromise(shouldReject: Bool = false) -> Promise<String> {
     let promise = Promise<String> { (resolve, reject) in
       self.delayAsync {
         if (shouldReject) {
           reject(Self.error)
         } else {
-          resolve(result)
+          resolve(Self.result)
         }
       }
     }
