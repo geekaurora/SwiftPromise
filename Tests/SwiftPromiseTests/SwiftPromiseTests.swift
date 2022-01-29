@@ -60,31 +60,27 @@ final class SwiftPromiseTests: XCTestCase {
    */
   func testChainingThenResolve() {
     let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
-    // Init promise.
-    let promise = createPromise(shouldAsync: false)
     
+    let promise = createPromise(shouldAsync: false)
     promise
       .then { (result) -> Promise in
         return Promise(root: promise) { (resolve, reject) in
           dbgPrint("[Debug] Finished the first then().")
-          XCTAssertTrue(result as! String == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
+          XCTAssertEqual(result as! String, Self.result)
           
-          // Call resolve() with the result for the next Promise.
           resolve(Self.firstThenPromiseResult)
         }
       }
       .then { (result) -> Promise in
         return Promise(root: promise) { (resolve, reject) in
           dbgPrint("[Debug] Finished the first then().")
-          XCTAssertTrue(result as! String == Self.firstThenPromiseResult, "Actual result = \(result); Expected result = \(Self.result)")
+          XCTAssertEqual(result as! String, Self.firstThenPromiseResult)
           
-          // Call resolve() with the result for the next Promise.
           resolve(Self.secondThenPromiseResult)
           expectation.fulfill()
         }
       }
     
-    // Wait for asynchronous result.
     waitExpectation()
   }
   
