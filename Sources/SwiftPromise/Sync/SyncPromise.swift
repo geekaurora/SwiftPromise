@@ -16,10 +16,6 @@ public class SyncPromise<Input> {
   public typealias Execution = (@escaping Resolve, @escaping Reject) -> Void
   private let execution: Execution
   
-  /// Input of execution.
-  // private var result: Result?
-  /// Indicates whether result has been initialized.
-  private var isResultInitialized = false
   /// Error of execution.
   private var error: Error?
   

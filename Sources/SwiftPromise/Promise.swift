@@ -127,6 +127,7 @@ private extension Promise {
       // If `preExecution()` is called from `then()` directly, should use `rootPromise?.prevThenResult` as nextResult if exists.
       nextResult = rootPromise?.prevThenResult ?? result
     }
+    // Should cache `result` as `prevThenResult`, because in sync mode: when current promise resolve() result, the next thenClosure() isn't set yet.
     rootPromise?.prevThenResult = result
     
     guard let nextThenClosure = rootPromise?.dequeNextThenClosures() else {
