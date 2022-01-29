@@ -8,16 +8,16 @@ import Foundation
  1. then()/catch():
  ```
  let promise = Promise<String> { (resolve, reject) in
-   self.delayAsync {
-    resolve("result")
-   }
+ self.delayAsync {
+ resolve("result")
+ }
  }
  promise
  .then { result in
-  print(result)
+ print(result)
  }
  .catch { error in
-  print(error)
+ print(error)
  }
  ```
  If `then()` returns a new Promise, it will be executed correspondingly.
@@ -34,9 +34,9 @@ import Foundation
  
  Promise.all(promises)
  .then { _ in
-   print("Completed all promises successfully.")
+ print("Completed all promises successfully.")
  }.catch { error in
-   print("Failed to execute promises. Error - \(error)")
+ print("Failed to execute promises. Error - \(error)")
  }
  ```
  */
@@ -47,7 +47,7 @@ public class Promise<Input> {
   public typealias Resolve = (Input?) -> Void
   /// Reject callback closure.
   public typealias Reject = (Error?) -> Void
-  /// Execution closure: the real execution of Promise.
+  /// Pre-execution closure: the real execution will be when resolve() / reject() gets called.
   public typealias Execution = (@escaping Resolve, @escaping Reject) -> Void
   private let execution: Execution
   
@@ -85,14 +85,13 @@ public class Promise<Input> {
   /// `then` function that will be called on `resolve()`.
   @discardableResult
   //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
-  //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Any> {
   public func then(_ thenClosure: @escaping Then<Input, Any>) -> Promise<Any> {
-  // Store `then`.
+    // Store `then`.
     self.thenClosure = thenClosure
     
     // * Return new Promise: its `.then()` will be set externally.
     nextPromise = Promise<Any> { (resolve, reject) in }
-
+    
     if self.externalInput != nil {
       // Resolve automatically with previousResult: for non-first promise.
       resolve(self.externalInput)
@@ -115,42 +114,42 @@ public class Promise<Input> {
   /// Execute synchronously on the current thread and return result.
   ///
   /// - Note: execution shouldn't be on the same thread as `await()`, otherwise it will cause deadlock.
-//  public func await() -> Result? {
-//    // Start `execution`.
-//    execution(resolve, reject)
-//    // Wait on the current thread until get result or error.
-//    waitForSignal()
-//    return self.result
-//  }
+  //  public func await() -> Result? {
+  //    // Start `execution`.
+  //    execution(resolve, reject)
+  //    // Wait on the current thread until get result or error.
+  //    waitForSignal()
+  //    return self.result
+  //  }
   
   /// Returns when all `promises` complete.
-//  public static func all(_ promises: [Promise]) -> Promise<String> {
-//    // 0. Create promise that executes all `promises`.
-//    let allPromise = Promise<String> { (resolve, reject) in
-//      let dispatchGroup = DispatchGroup()
-//
-//      // 1. Loop through all promises and execute.
-//      for promise in promises {
-//        dispatchGroup.enter()
-//        promise.then { res in
-//          dispatchGroup.leave()
-//          return nil
-//        }.catch { err in
-//          // 2. Exit on any failure of promises
-//          reject(err)
-//          return
-//        }
-//      }
-//
-//      // 3. Notify after all `promises` complete.
-//      dispatchGroup.notify(queue: .main) {
-//        resolve(allPromisesSuccessString)
-//      }
-//    }
-//
-//    // 4. Return `allPromise`.
-//    return allPromise
-//  }
+  //  public static func all(_ promises: [Promise]) -> Promise<String> {
+  //    // 0. Create promise that executes all `promises`.
+  //    let allPromise = Promise<String> { (resolve, reject) in
+  //      let dispatchGroup = DispatchGroup()
+  //
+  //      // 1. Loop through all promises and execute.
+  //      for promise in promises {
+  //        dispatchGroup.enter()
+  //        promise.then { res in
+  //          dispatchGroup.leave()
+  //          return nil
+  //        }.catch { err in
+  //          // 2. Exit on any failure of promises
+  //          reject(err)
+  //          return
+  //        }
+  //      }
+  //
+  //      // 3. Notify after all `promises` complete.
+  //      dispatchGroup.notify(queue: .main) {
+  //        resolve(allPromisesSuccessString)
+  //      }
+  //    }
+  //
+  //    // 4. Return `allPromise`.
+  //    return allPromise
+  //  }
   
 }
 
