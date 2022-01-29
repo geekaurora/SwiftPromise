@@ -87,12 +87,14 @@ public class Promise<Input> {
   /// `then` function that will be called on `resolve()`.
   @discardableResult
   //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
-  public func then(_ thenClosure: @escaping Then<Input, Any>) -> Promise<Any> {
+  public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
     // 1. Store `then`.
-    // self.thenClosure = thenClosure
+     // self.thenClosure = thenClosure
+    // let thenClosure2 = thenClosure
     
     // * New Promise: its `.then()` will be set externally.
-    nextPromise = Promise<Any> { (resolve, reject) in }
+    let nextPromise = Promise<Output> { (resolve, reject) in }
+    self.nextPromise = nextPromise as? Promise<Any>
     
     // 2. Trigger preExecution.
     if self.externalInput != nil {
@@ -104,7 +106,7 @@ public class Promise<Input> {
     }
     
     // 3. Return new Promise.
-    return nextPromise!
+    return nextPromise
     // return self
   }
   

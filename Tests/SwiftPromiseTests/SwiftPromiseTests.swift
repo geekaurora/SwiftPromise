@@ -16,7 +16,7 @@ final class SwiftPromiseTests: XCTestCase {
     // Init promise.
     let promise = createPromise()
     // Test then().
-    promise.then { (result) in
+    promise.then { (result) -> String? in
       XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
       expectation.fulfill()
       return nil
@@ -35,12 +35,12 @@ final class SwiftPromiseTests: XCTestCase {
 
     // Test chaining then().
     promise
-      .then { (result) in
+      .then { (result) -> String? in
         XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
         return Self.chainingThenPromiseResult
       }
     // * Note: next then() will call the same promise, as prev then() method returns `self`.
-      .then { (result) in
+      .then { (result) -> String? in
         XCTAssertEqual(result as! String, Self.chainingThenPromiseResult)
         expectation.fulfill()
         return nil
