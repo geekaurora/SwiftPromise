@@ -1,9 +1,9 @@
 import Foundation
 
 /**
- Only supports sync mode `then()`.
+ The promise that supports sync mode  chaining`then()` closures.
  
- `then()`: returns Value, instead of Promise.
+ `then()` closure: returns Value, instead of Promise.
  */
 public class SyncPromise<Input> {
   public typealias Result = Any

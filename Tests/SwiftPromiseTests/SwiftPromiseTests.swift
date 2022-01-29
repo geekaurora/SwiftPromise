@@ -84,6 +84,9 @@ final class SwiftPromiseTests: XCTestCase {
     waitExpectation()
   }
   
+  /**
+   Test chaining multitple `then` asynchronously - returns Promise.
+   */
   func testChainingThenResolveAsynchronously() {
     let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
     
@@ -135,7 +138,6 @@ private extension SwiftPromiseTests {
   
   func delayAsync(shouldAsync: Bool = true, _ closure: @escaping () -> Void) {
     if shouldAsync {
-      // DispatchQueue.global().asyncAfter(deadline: .now() + Self.asyncDelay, execute: closure)
       DispatchQueue.main.asyncAfter(deadline: .now() + Self.asyncDelay, execute: closure)
     } else {
       closure()
