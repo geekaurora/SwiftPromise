@@ -89,12 +89,11 @@ public class Promise<Input> {
   //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
   public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
     // 1. Store `then`.
-     // self.thenClosure = thenClosure
-    // let thenClosure2 = thenClosure
+    //self.thenClosure = thenClosure as! Then<Any, Any>
     
     // * New Promise: its `.then()` will be set externally.
     let nextPromise = Promise<Output> { (resolve, reject) in }
-    self.nextPromise = nextPromise as? Promise<Any>
+    self.nextPromise = nextPromise as! Promise<Any>
     
     // 2. Trigger preExecution.
     if self.externalInput != nil {

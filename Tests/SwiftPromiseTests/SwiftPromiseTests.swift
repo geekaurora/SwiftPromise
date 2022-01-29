@@ -36,6 +36,7 @@ final class SwiftPromiseTests: XCTestCase {
     // Test chaining then().
     promise
       .then { (result) -> String? in
+        print("First then")
         XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
         return Self.chainingThenPromiseResult
       }
