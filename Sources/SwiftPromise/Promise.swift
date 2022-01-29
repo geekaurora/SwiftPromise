@@ -40,16 +40,18 @@ import Foundation
  }
  ```
  */
-public class Promise<Result> {
+public class Promise<Input> {
+  public typealias Result = Any
+  
   /// Resolve callback closure.
-  public typealias Resolve = (Result?) -> Void
+  public typealias Resolve = (Input?) -> Void
   /// Reject callback closure.
   public typealias Reject = (Error?) -> Void
   /// Execution closure.
   public typealias Execution = (@escaping Resolve, @escaping Reject) -> Void
   private let execution: Execution
   
-  /// Result of execution.
+  /// Input of execution.
   private var result: Result?
   /// Indicates whether result has been initialized.
   private var isResultInitialized = false
@@ -58,8 +60,8 @@ public class Promise<Result> {
   
   /// Then callback closure.
   // public typealias Then<T> = (T?) -> Promise<T>?
-  public typealias Then<T> = (T?) -> T?
-  private var thenClosure: Then<Result>?
+  public typealias Then<T> = (T?) -> Any?
+  private var thenClosure: Then<Input>?
   /// Catch callback closure.
   public typealias Catch = (Error?) -> Void
   private var catchClosure: Catch?
@@ -79,7 +81,7 @@ public class Promise<Result> {
   
   /// `then` function that will be called on `resolve()`.
   @discardableResult
-  public func then(_ thenClosure: @escaping Then<Result>) -> Promise<Result> {
+  public func then(_ thenClosure: @escaping Then<Input>) -> Promise<Input> {
     // Store `then`.
     self.thenClosure = thenClosure
     // Start `execution`.
@@ -89,7 +91,7 @@ public class Promise<Result> {
   
   /// `catch` function that will be called on `reject()`.
   @discardableResult
-  public func `catch`(_ catchClosure: @escaping Catch) -> Promise<Result> {
+  public func `catch`(_ catchClosure: @escaping Catch) -> Promise<Input> {
     self.catchClosure = catchClosure
     return self
   }
@@ -139,7 +141,7 @@ public class Promise<Result> {
 
 private extension Promise {
   /// Function will be called on execution success.
-  func resolve(_ result: Result?) {
+  func resolve(_ result: Input?) {
     if !isResultInitialized {
       // Only update `self.result` by `resolve()` for the first time, after that `self.result` will be updated by each `then` block.
       self.result = result
