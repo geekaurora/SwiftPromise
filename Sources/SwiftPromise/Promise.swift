@@ -62,7 +62,7 @@ public class Promise<Input> {
   // public typealias Then<T> = (T?) -> Promise<T>?
   public typealias Then<T, U> = (T?) -> U?
   // private var thenClosure: Then<Input, Any>?
-  private var thenClosure: ((Any?) -> Any?)?
+  //private var thenClosure: ((Any?) -> Any?)?
   
   /// Catch callback closure.
   public typealias Catch = (Error?) -> Void
@@ -84,33 +84,49 @@ public class Promise<Input> {
     self.preExecution = preExecution
   }
   
-  /// `then` function that will be called on `resolve()`.
+  /// `then` function that will be called on `resolve()`: `then()` returns Promise.
   @discardableResult
-  //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
-  public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
+  public func then<Output>(_ thenClosure: @escaping Then<Input, Promise<Output>>) -> Promise<Output> {
     // 1. Store `then`.
-    self.thenClosure = { (input) in
-      return thenClosure(input as! Input)
-    }
+//    self.thenClosure = { (input) in
+//      return thenClosure(input as! Input)
+//    }
     
-    // * New Promise: its `.then()` will be set externally.
-    let nextPromise = Promise<Output> { (resolve, reject) in }
-    self.nextPromise = nextPromise as! Promise<Any>
+    let nextPromise = thenClosure(nil)
     
-    // 2. Trigger preExecution.
-    if self.externalInput != nil {
-      // Resolve automatically with previousResult: for non-first promise.
-      resolve(self.externalInput)
-    } else {
-      // Start pre-preExecution `preExecution`: the real preExecution will be when resolve() / reject() gets called.
-      preExecution(resolve, reject)
-    }
+    // Start pre-preExecution `preExecution`: the real preExecution will be when resolve() / reject() gets called.
+    preExecution(resolve, reject)
     
     // 3. Return new Promise.
-    return nextPromise
-    // return self
+    return nextPromise!
   }
   
+  /// `then` function that will be called on `resolve()`.
+//  //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
+//  public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
+//    // 1. Store `then`.
+//    self.thenClosure = { (input) in
+//      return thenClosure(input as! Input)
+//    }
+//
+//    // * New Promise: its `.then()` will be set externally.
+//    let nextPromise = Promise<Output> { (resolve, reject) in }
+//    self.nextPromise = nextPromise as! Promise<Any>
+//
+//    // 2. Trigger preExecution.
+//    if self.externalInput != nil {
+//      // Resolve automatically with previousResult: for non-first promise.
+//      resolve(self.externalInput)
+//    } else {
+//      // Start pre-preExecution `preExecution`: the real preExecution will be when resolve() / reject() gets called.
+//      preExecution(resolve, reject)
+//    }
+//
+//    // 3. Return new Promise.
+//    return nextPromise
+//    // return self
+//  }
+//
   /// `catch` function that will be called on `reject()`.
   @discardableResult
   public func `catch`(_ catchClosure: @escaping Catch) -> Promise<Input> {
@@ -166,7 +182,8 @@ private extension Promise {
   /// Function will be called on preExecution success.
   func resolve(_ input: Input?) {
     // Use `self.externalInput` if exists, otherwise use `input`.
-    let nextInput = thenClosure?(self.externalInput ?? input)
+    // let nextInput = thenClosure?(self.externalInput ?? input)
+    let nextInput = input
     
     // Set the input for `nextPromise`.
     nextPromise?.externalInput = nextInput

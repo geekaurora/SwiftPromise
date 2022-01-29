@@ -4,7 +4,8 @@ import CZTestUtils
 
 final class SwiftPromiseTests: XCTestCase {
   static let result = "PromiseResult"
-  static let chainingThenPromiseResult = "chainingThenPromiseResult"
+  static let firstThenPromiseResult = "firstThenPromiseResult"
+  static let secondThenPromiseResult = "secondThenPromiseResult"
   static let error: Error? = NSError(domain: "Error", code: 999, userInfo: nil)
   static let asyncDelay: TimeInterval = 0.1
   static let fulfillWaitInterval: TimeInterval = 30
@@ -24,9 +25,8 @@ final class SwiftPromiseTests: XCTestCase {
     // Wait for asynchronous result.
     waitExpectation()
   }
-  
   /**
-   Test chaining multitple `then`.
+   Test chaining multitple `then` - returns Promise.
    */
   func testChainingThenResolve() {
     let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
@@ -35,21 +35,54 @@ final class SwiftPromiseTests: XCTestCase {
 
     // Test chaining then().
     promise
-      .then { (result) -> String? in
-        print("First then")
-        XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
-        return Self.chainingThenPromiseResult
+      .then { (result) -> Promise<String> in
+        return Promise<String> { (resolve, reject) in
+          print("First then")
+          XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
+          
+          // Call resolve() with the result for the next Promise
+          resolve(Self.firstThenPromiseResult)
+          expectation.fulfill()
+        }
+            
       }
     // * Note: next then() will call the same promise, as prev then() method returns `self`.
-      .then { (result) -> String? in
-        XCTAssertEqual(result as! String, Self.chainingThenPromiseResult)
-        expectation.fulfill()
-        return nil
-      }
+//      .then { (result) -> String? in
+//        XCTAssertEqual(result as! String, Self.chainingThenPromiseResult)
+//        expectation.fulfill()
+//        return nil
+//      }
 
     // Wait for asynchronous result.
     waitExpectation()
   }
+  
+  
+//  /**
+//   Test chaining multitple `then` - returns value.
+//   */
+//  func testChainingThenResolve() {
+//    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
+//    // Init promise.
+//    let promise = createPromise(shouldAsync: false)
+//
+//    // Test chaining then().
+//    promise
+//      .then { (result) -> String? in
+//        print("First then")
+//        XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
+//        return Self.chainingThenPromiseResult
+//      }
+//    // * Note: next then() will call the same promise, as prev then() method returns `self`.
+//      .then { (result) -> String? in
+//        XCTAssertEqual(result as! String, Self.chainingThenPromiseResult)
+//        expectation.fulfill()
+//        return nil
+//      }
+//
+//    // Wait for asynchronous result.
+//    waitExpectation()
+//  }
 
 //  func testReject() {
 //    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
