@@ -34,6 +34,7 @@ public class Promise {
   private var semaphore: DispatchSemaphore?
   
   private var externalInput: Input?
+  private weak var rootPromise: Promise?
   private var nextPromise: Promise?
   
   public static var allPromisesSuccessString: String {
@@ -42,7 +43,9 @@ public class Promise {
   
   /// Initialize with `preExecution` closure.
   /// Call `resolve()` on success, and call `reject()` on failure.
-  public init(_ preExecution: @escaping Execution) {
+  public init(root rootPromise: Promise? = nil,
+              _ preExecution: @escaping Execution) {
+    self.rootPromise = rootPromise
     self.preExecution = preExecution
   }
   
@@ -50,7 +53,7 @@ public class Promise {
   @discardableResult
   public func then(_ thenClosure: @escaping Then<Input, Promise>) -> Promise {
     // 1. Store `thenClosure`.
-    thenClosures.append(thenClosure)
+    rootPromise?.thenClosures.append(thenClosure)
     
     // 2. Only the first promise is prepared here.
     // Start pre-preExecution `preExecution`: the real preExecution will be when resolve() / reject() gets called.
@@ -95,14 +98,26 @@ public class Promise {
     return self
   }
   
+  // MARK: - RootPromise
+  
+  func dequeNextThenClosures() -> Then<Input, Promise>? {
+    guard currPromiseIndex <= thenClosures.count - 1 else {
+      return nil
+    }
+    let nextThenClosure = thenClosures[currPromiseIndex]
+    currPromiseIndex += 1
+    return nextThenClosure
+  }
+  
 }
+
 
 // MARK: - Resolve / Reject
 
 private extension Promise {
   /// Function will be called on preExecution success.
   func resolve(_ input: Input?) {
-    if currPromiseIndex > thenClosures.count - 1 {
+    guard let nextThenClosure = rootPromise?.dequeNextThenClosures() else {
       // If completes the last promise, then return.
       dbgPrintWithFunc(self, "Completed all promises! currPromiseIndex = \(currPromiseIndex), thenClosures.count = \(thenClosures.count)")
       return
@@ -110,8 +125,7 @@ private extension Promise {
     let nextInput = input
     
     // Set `nextInput` to `nextPromise`: generate `nextPromise` with `thenClosures` at `currPromiseIndex`.
-    nextPromise = thenClosures[currPromiseIndex](nextInput)
-    currPromiseIndex += 1
+    nextPromise = nextThenClosure(nextInput)
     
     // Call nextPromise's preExecution: prepare.
     nextPromise?.preExecution(nextPromise!.resolve, nextPromise!.reject)
