@@ -12,19 +12,17 @@ public class Promise {
   public typealias Execution = (@escaping Resolve, @escaping Reject) -> Void
   private let preExecution: Execution
   
-  /// Input of preExecution.
-  // private var result: Result?
-  /// Indicates whether result has been initialized.
-  private var isResultInitialized = false
   /// Error of preExecution.
   private var error: Error?
   
   /// Then callback closure.
-  // public typealias Then<T> = (T?) -> Promise<T>?
   public typealias Then<T, U> = (T?) -> U?
-  // private var thenClosure: Then<Input, Any>?
-  //private var thenClosure: ((Any?) -> Any?)?
   
+  /// Array of chaining then closures.
+  /// - Note: RootPromise maintains all `thenClosures`, instead of each Promise maintaining its own.
+  private var thenClosures = [Then<Input, Any>]()
+  private var currentThenIndex = 0
+
   /// Catch callback closure.
   public typealias Catch = (Error?) -> Void
   private var catchClosure: Catch?
