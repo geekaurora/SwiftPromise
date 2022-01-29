@@ -188,6 +188,9 @@ private extension Promise {
     // Set the input for `nextPromise`.
     nextPromise?.externalInput = nextInput
     
+    // Call nextPromise's preExecution: prepare.
+    nextPromise?.preExecution(nextPromise!.resolve, nextPromise!.reject)
+    
     // No need to call nextPromise: will be called in `then()` of nextPromise.
     // nextPromise?.resolve(nextInput)
   }
