@@ -7,7 +7,7 @@ final class SwiftPromiseTests: XCTestCase {
   static let firstThenPromiseResult = "firstThenPromiseResult"
   static let secondThenPromiseResult = "secondThenPromiseResult"
   static let error: Error? = NSError(domain: "Error", code: 999, userInfo: nil)
-  static let asyncDelay: TimeInterval = 0.1
+  static let asyncDelay: TimeInterval = 0.01
   static let fulfillWaitInterval: TimeInterval = 30
   
   // MARK: - Test resolve() / reject()
@@ -16,6 +16,27 @@ final class SwiftPromiseTests: XCTestCase {
     let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
     // Init promise.
     let promise = createPromise(shouldAsync: false)
+    
+    promise
+      .then { (result) -> Promise in
+        return Promise(root: promise) { (resolve, reject) in
+          XCTAssertTrue(result as! String == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
+          
+          // Call resolve() with the result for the next Promise
+          resolve(Self.firstThenPromiseResult)
+          expectation.fulfill()
+        }
+        
+      }
+    
+    // Wait for asynchronous result.
+    waitExpectation()
+  }
+  
+  func testSingleThenResolveAsynchronously() {
+    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
+    // Init promise.
+    let promise = createPromise(shouldAsync: true)
     
     promise
       .then { (result) -> Promise in
@@ -221,7 +242,8 @@ private extension SwiftPromiseTests {
   
   func delayAsync(shouldAsync: Bool = true, _ closure: @escaping () -> Void) {
     if shouldAsync {
-      DispatchQueue.global().asyncAfter(deadline: .now() + Self.asyncDelay, execute: closure)
+      // DispatchQueue.global().asyncAfter(deadline: .now() + Self.asyncDelay, execute: closure)
+      DispatchQueue.main.asyncAfter(deadline: .now() + Self.asyncDelay, execute: closure)
     } else {
       closure()
     }
