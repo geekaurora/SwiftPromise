@@ -58,7 +58,7 @@ public class Promise {
   @discardableResult
   public func then(_ thenClosure: @escaping Then<Input, Promise>) -> Promise {
     // 1. Store `thenClosure`.
-    rootPromise?.thenClosures.append(thenClosure)
+    rootPromise?.enqueueThenClosure(thenClosure)
     
     // 2. Only the first promise is prepared here.
     // Start pre-preExecution `preExecution`: the real preExecution will be when resolve() / reject() gets called.
@@ -104,6 +104,10 @@ public class Promise {
   }
   
   // MARK: - RootPromise
+  
+  func enqueueThenClosure(_ thenClosure: @escaping Then<Input, Promise>) {
+    thenClosures.append(thenClosure)
+  }
   
   func dequeNextThenClosures() -> Then<Input, Promise>? {
     guard currPromiseIndex <= thenClosures.count - 1 else {
