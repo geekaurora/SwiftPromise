@@ -47,15 +47,15 @@ public class Promise<Input> {
   public typealias Resolve = (Input?) -> Void
   /// Reject callback closure.
   public typealias Reject = (Error?) -> Void
-  /// Pre-execution closure: the real execution will be when resolve() / reject() gets called.
+  /// Pre-execution closure: the real preExecution will be when resolve() / reject() gets called.
   public typealias Execution = (@escaping Resolve, @escaping Reject) -> Void
-  private let execution: Execution
+  private let preExecution: Execution
   
-  /// Input of execution.
+  /// Input of preExecution.
   // private var result: Result?
   /// Indicates whether result has been initialized.
   private var isResultInitialized = false
-  /// Error of execution.
+  /// Error of preExecution.
   private var error: Error?
   
   /// Then callback closure.
@@ -76,10 +76,10 @@ public class Promise<Input> {
     return "Succeed to execute all promises."
   }
   
-  /// Initialize with `execution` closure.
+  /// Initialize with `preExecution` closure.
   /// Call `resolve()` on success, and call `reject()` on failure.
-  public init(_ execution: @escaping Execution) {
-    self.execution = execution
+  public init(_ preExecution: @escaping Execution) {
+    self.preExecution = preExecution
   }
   
   /// `then` function that will be called on `resolve()`.
@@ -96,8 +96,8 @@ public class Promise<Input> {
       // Resolve automatically with previousResult: for non-first promise.
       resolve(self.externalInput)
     } else {
-      // Start pre-execution `execution`: the real execution will be when resolve() / reject() gets called.
-      execution(resolve, reject)
+      // Start pre-preExecution `preExecution`: the real preExecution will be when resolve() / reject() gets called.
+      preExecution(resolve, reject)
     }
     
     return nextPromise!
@@ -113,10 +113,10 @@ public class Promise<Input> {
   
   /// Execute synchronously on the current thread and return result.
   ///
-  /// - Note: execution shouldn't be on the same thread as `await()`, otherwise it will cause deadlock.
+  /// - Note: preExecution shouldn't be on the same thread as `await()`, otherwise it will cause deadlock.
   //  public func await() -> Result? {
-  //    // Start `execution`.
-  //    execution(resolve, reject)
+  //    // Start `preExecution`.
+  //    preExecution(resolve, reject)
   //    // Wait on the current thread until get result or error.
   //    waitForSignal()
   //    return self.result
@@ -156,7 +156,7 @@ public class Promise<Input> {
 // MARK: - Resolve / Reject
 
 private extension Promise {
-  /// Function will be called on execution success.
+  /// Function will be called on preExecution success.
   func resolve(_ input: Input?) {
     // Use `self.externalInput` if exists, otherwise use `input`.
     let nextInput = thenClosure?(self.externalInput ?? input)
@@ -166,12 +166,12 @@ private extension Promise {
     
     // Call nextPromise: No need - will be called in `then()` of nextPromise.
     // nextPromise?.resolve(nextInput)
-    // nextPromise.execution(resolve, reject)
+    // nextPromise.preExecution(resolve, reject)
     
     //self.result = thenClosure?(self.result)
   }
   
-  /// Function will be called on execution failure.
+  /// Function will be called on preExecution failure.
   func reject(_ error: Error?) {
     // Call `then` with `error`.
     catchClosure?(error)
