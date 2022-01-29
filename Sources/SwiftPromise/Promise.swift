@@ -64,7 +64,6 @@ public class Promise {
     // 2. preExecution(): if has no thenClosure in queue - no previous resolve() left.
     // The remaining promises will be prepared in its prev promise's resolve().
     // `preExecution`: just prepare - the real execution will be when resolve() / reject() gets called.
-    // if currPromiseIndex == 0
     if !hasQueuedThenClosure {
       preExecution(resolve, reject)
     }
@@ -72,32 +71,6 @@ public class Promise {
     return self
   }
   
-  /// `then` function that will be called on `resolve()`.
-//  //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
-//  public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
-//    // 1. Store `then`.
-//    self.thenClosure = { (input) in
-//      return thenClosure(input as! Input)
-//    }
-//
-//    // * New Promise: its `.then()` will be set externally.
-//    let nextPromise = Promise<Output> { (resolve, reject) in }
-//    self.nextPromise = nextPromise as! Promise<Any>
-//
-//    // 2. Trigger preExecution.
-//    if self.prevThenResult != nil {
-//      // Resolve automatically with previousResult: for non-first promise.
-//      resolve(self.prevThenResult)
-//    } else {
-//      // Start pre-preExecution `preExecution`: the real preExecution will be when resolve() / reject() gets called.
-//      preExecution(resolve, reject)
-//    }
-//
-//    // 3. Return new Promise.
-//    return nextPromise
-//    // return self
-//  }
-//
   /// `catch` function that will be called on `reject()`.
   @discardableResult
   public func `catch`(_ catchClosure: @escaping Catch) -> Promise {
