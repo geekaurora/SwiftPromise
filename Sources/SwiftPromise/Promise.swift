@@ -84,7 +84,8 @@ public class Promise<Input> {
   /// `then` function that will be called on `resolve()`.
   @discardableResult
   //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
-  public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Any> {
+  //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Any> {
+  public func then(_ thenClosure: @escaping Then<Input, Any>) -> Promise<Any> {
   // Store `then`.
     self.thenClosure = thenClosure
     
