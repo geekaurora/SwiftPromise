@@ -65,7 +65,8 @@ public class Promise {
     // The remaining promises will be prepared in its prev promise's resolve().
     // `preExecution`: just prepare - the real execution will be when resolve() / reject() gets called.
     if !hasQueuedThenClosure {
-      preExecution(resolve, reject)
+      // Call `resolveSync()` explicitly.
+      preExecution(resolveSync, reject)
     }
     
     return self
@@ -95,13 +96,6 @@ public class Promise {
     let nextThenClosure = thenClosures.removeFirst()
     currPromiseIndex += 1
     return nextThenClosure
-    
-//    guard currPromiseIndex <= thenClosures.count - 1 else {
-//      return nil
-//    }
-//    let nextThenClosure = thenClosures[currPromiseIndex]
-//    currPromiseIndex += 1
-//    return nextThenClosure
   }
   
 }
@@ -113,6 +107,19 @@ private extension Promise {
   /// Function will be called on preExecution success.
   /// resolve(): completion with the current result.
   func resolve(_ result: Input?) {
+    _resolve(result)
+  }
+  
+  func resolveSync(_ result: Input?) {
+    _resolve(result, isSync: true)
+  }
+  
+  func _resolve(_ result: Input?, isSync: Bool = false) {
+    var nextResult = result
+    if isSync {
+      // If `preExecution()` is called from `then()` directly, should use `rootPromise?.prevThenResult` as nextResult if exists.
+      nextResult = rootPromise?.prevThenResult ?? result
+    }
     rootPromise?.prevThenResult = result
     
     guard let nextThenClosure = rootPromise?.dequeNextThenClosures() else {
@@ -120,9 +127,6 @@ private extension Promise {
       return
     }
     
-    // Set nextResult: `nextThenClosure` isn't nil, it will call nextPromise with the current `result`.
-    let nextResult = result
-
     // Generate nextPromise: `nextThenClosure` with `nextResult`.
     nextPromise = nextThenClosure(nextResult)
     
