@@ -108,7 +108,7 @@ public class Promise {
   // MARK: - RootPromise
   
   func hasQueuedThenClosure() -> Bool {
-    return thenClosures.count >= 0
+    return thenClosures.count > 0
   }
   
   func enqueueThenClosure(_ thenClosure: @escaping Then<Input, Promise>) {
