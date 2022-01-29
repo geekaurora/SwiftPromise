@@ -15,6 +15,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
+        .package(url: "https://github.com/geekaurora/CZUtils.git", from: "4.2.7"),
         .package(url: "https://github.com/geekaurora/CZTestUtils.git", from: "1.0.0")
     ],
     targets: [
@@ -22,7 +23,7 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "SwiftPromise",
-            dependencies: []),
+            dependencies: ["CZUtils"]),
         .testTarget(
             name: "SwiftPromiseTests",
             dependencies: ["SwiftPromise", "CZTestUtils"]),

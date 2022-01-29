@@ -1,4 +1,5 @@
 import Foundation
+import CZUtils
 
 public class Promise {
   public typealias Input = Any
@@ -101,6 +102,11 @@ public class Promise {
 private extension Promise {
   /// Function will be called on preExecution success.
   func resolve(_ input: Input?) {
+    if currPromiseIndex > thenClosures.count - 1 {
+      // If completes the last promise, then return.
+      dbgPrintWithFunc(self, "Completed all promises! currPromiseIndex = \(currPromiseIndex), thenClosures.count = \(thenClosures.count)")
+      return
+    }
     let nextInput = input
     
     // Set `nextInput` to `nextPromise`: generate `nextPromise` with `thenClosures` at `currPromiseIndex`.
