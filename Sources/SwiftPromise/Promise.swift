@@ -89,7 +89,9 @@ public class Promise<Input> {
   //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
   public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
     // 1. Store `then`.
-    //self.thenClosure = thenClosure as! Then<Any, Any>
+    self.thenClosure = { (input) in
+      return thenClosure(input as! Input)
+    }
     
     // * New Promise: its `.then()` will be set externally.
     let nextPromise = Promise<Output> { (resolve, reject) in }
