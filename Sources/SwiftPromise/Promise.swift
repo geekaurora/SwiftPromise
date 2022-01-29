@@ -43,7 +43,7 @@ public class Promise {
   
   /// Initialize with `preExecution` closure.
   /// Call `resolve()` on success, and call `reject()` on failure.
-  public init(root rootPromise: Promise? = nil,
+  public init(root rootPromise: Promise?,
               _ preExecution: @escaping Execution) {
     self.rootPromise = rootPromise
     self.preExecution = preExecution

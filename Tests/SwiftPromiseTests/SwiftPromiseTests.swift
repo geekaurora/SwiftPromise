@@ -1,4 +1,5 @@
 import XCTest
+import CZUtils
 import CZTestUtils
 @testable import SwiftPromise
 
@@ -65,6 +66,7 @@ final class SwiftPromiseTests: XCTestCase {
     promise
       .then { (result) -> Promise in
         return Promise(root: promise) { (resolve, reject) in
+          dbgPrint("[Debug] Finished the first then().")
           XCTAssertTrue(result as! String == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
           
           // Call resolve() with the result for the next Promise.
@@ -73,6 +75,7 @@ final class SwiftPromiseTests: XCTestCase {
       }
       .then { (result) -> Promise in
         return Promise(root: promise) { (resolve, reject) in
+          dbgPrint("[Debug] Finished the first then().")
           XCTAssertTrue(result as! String == Self.firstThenPromiseResult, "Actual result = \(result); Expected result = \(Self.result)")
           
           // Call resolve() with the result for the next Promise.
@@ -92,7 +95,7 @@ final class SwiftPromiseTests: XCTestCase {
 private extension SwiftPromiseTests {
   
   func createPromise(shouldAsync: Bool = true, shouldReject: Bool = false) -> Promise {
-    let promise = Promise { (resolve, reject) in
+    let promise = Promise(root: nil) { (resolve, reject) in
       self.delayAsync(shouldAsync: shouldAsync) {
         if shouldReject {
           reject(Self.error)
