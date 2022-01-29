@@ -61,7 +61,9 @@ public class Promise<Input> {
   /// Then callback closure.
   // public typealias Then<T> = (T?) -> Promise<T>?
   public typealias Then<T, U> = (T?) -> U?
-  private var thenClosure: Then<Input, Any>?
+  // private var thenClosure: Then<Input, Any>?
+  private var thenClosure: ((Any?) -> Any?)?
+  
   /// Catch callback closure.
   public typealias Catch = (Error?) -> Void
   private var catchClosure: Catch?
@@ -87,7 +89,7 @@ public class Promise<Input> {
   //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
   public func then(_ thenClosure: @escaping Then<Input, Any>) -> Promise<Any> {
     // 1. Store `then`.
-    self.thenClosure = thenClosure
+    // self.thenClosure = thenClosure
     
     // * New Promise: its `.then()` will be set externally.
     nextPromise = Promise<Any> { (resolve, reject) in }
@@ -166,11 +168,8 @@ private extension Promise {
     // Set the input for `nextPromise`.
     nextPromise?.externalInput = nextInput
     
-    // Call nextPromise: No need - will be called in `then()` of nextPromise.
+    // No need to call nextPromise: will be called in `then()` of nextPromise.
     // nextPromise?.resolve(nextInput)
-    // nextPromise.preExecution(resolve, reject)
-    
-    //self.result = thenClosure?(self.result)
   }
   
   /// Function will be called on preExecution failure.
