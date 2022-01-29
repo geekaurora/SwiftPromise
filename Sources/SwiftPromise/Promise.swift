@@ -140,7 +140,6 @@ private extension Promise {
   /// Function will be called on preExecution success.
   /// resolve(): completion with the current result.
   func resolve(_ result: Input?) {
-    let nextResult = rootPromise?.prevThenResult ?? result
     rootPromise?.prevThenResult = result
     
     guard let nextThenClosure = rootPromise?.dequeNextThenClosures() else {
@@ -148,7 +147,10 @@ private extension Promise {
       return
     }
     
-    // Set `nextInput` to `nextPromise`: generate `nextPromise` with `thenClosures` at `currPromiseIndex`.
+    // Set nextResult: `nextThenClosure` isn't nil, it will call nextPromise with the current `result`.
+    let nextResult = result
+
+    // Generate nextPromise: `nextThenClosure` with `nextResult`.
     nextPromise = nextThenClosure(nextResult)
     
     // Call nextPromise's preExecution: prepare.
