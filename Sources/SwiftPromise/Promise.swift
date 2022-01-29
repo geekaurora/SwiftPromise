@@ -52,7 +52,7 @@ public class Promise<Input> {
   private let execution: Execution
   
   /// Input of execution.
-  private var result: Result?
+  // private var result: Result?
   /// Indicates whether result has been initialized.
   private var isResultInitialized = false
   /// Error of execution.
@@ -60,14 +60,16 @@ public class Promise<Input> {
   
   /// Then callback closure.
   // public typealias Then<T> = (T?) -> Promise<T>?
-  public typealias Then<T> = (T?) -> Any?
-  private var thenClosure: Then<Input>?
+  public typealias Then<T, U> = (T?) -> U?
+  private var thenClosure: Then<Input, Any>?
   /// Catch callback closure.
   public typealias Catch = (Error?) -> Void
   private var catchClosure: Catch?
   
   /// Semaphore for async/await signal.
   private var semaphore: DispatchSemaphore?
+  
+  private var nextPromise: Promise<Any>?
   
   public static var allPromisesSuccessString: String {
     return "Succeed to execute all promises."
@@ -81,12 +83,19 @@ public class Promise<Input> {
   
   /// `then` function that will be called on `resolve()`.
   @discardableResult
-  public func then(_ thenClosure: @escaping Then<Input>) -> Promise<Input> {
-    // Store `then`.
+  //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
+  public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Any> {
+  // Store `then`.
     self.thenClosure = thenClosure
+    
     // Start `execution`.
     execution(resolve, reject)
-    return self
+    
+    nextPromise = Promise<Any> { (resolve, reject) in
+      
+    }
+    return nextPromise!
+    // return self
   }
   
   /// `catch` function that will be called on `reject()`.
@@ -99,42 +108,43 @@ public class Promise<Input> {
   /// Execute synchronously on the current thread and return result.
   ///
   /// - Note: execution shouldn't be on the same thread as `await()`, otherwise it will cause deadlock.
-  public func await() -> Result? {
-    // Start `execution`.
-    execution(resolve, reject)
-    // Wait on the current thread until get result or error.
-    waitForSignal()
-    return self.result
-  }
+//  public func await() -> Result? {
+//    // Start `execution`.
+//    execution(resolve, reject)
+//    // Wait on the current thread until get result or error.
+//    waitForSignal()
+//    return self.result
+//  }
   
   /// Returns when all `promises` complete.
-  public static func all(_ promises: [Promise]) -> Promise<String> {
-    // 0. Create promise that executes all `promises`.
-    let allPromise = Promise<String> { (resolve, reject) in
-      let dispatchGroup = DispatchGroup()
-      
-      // 1. Loop through all promises and execute.
-      for promise in promises {
-        dispatchGroup.enter()
-        promise.then { res in
-          dispatchGroup.leave()
-          return nil
-        }.catch { err in
-          // 2. Exit on any failure of promises
-          reject(err)
-          return
-        }
-      }
-      
-      // 3. Notify after all `promises` complete.
-      dispatchGroup.notify(queue: .main) {
-        resolve(allPromisesSuccessString)
-      }
-    }
-    
-    // 4. Return `allPromise`.
-    return allPromise
-  }
+//  public static func all(_ promises: [Promise]) -> Promise<String> {
+//    // 0. Create promise that executes all `promises`.
+//    let allPromise = Promise<String> { (resolve, reject) in
+//      let dispatchGroup = DispatchGroup()
+//
+//      // 1. Loop through all promises and execute.
+//      for promise in promises {
+//        dispatchGroup.enter()
+//        promise.then { res in
+//          dispatchGroup.leave()
+//          return nil
+//        }.catch { err in
+//          // 2. Exit on any failure of promises
+//          reject(err)
+//          return
+//        }
+//      }
+//
+//      // 3. Notify after all `promises` complete.
+//      dispatchGroup.notify(queue: .main) {
+//        resolve(allPromisesSuccessString)
+//      }
+//    }
+//
+//    // 4. Return `allPromise`.
+//    return allPromise
+//  }
+  
 }
 
 // MARK: - Resolve / Reject
@@ -142,27 +152,19 @@ public class Promise<Input> {
 private extension Promise {
   /// Function will be called on execution success.
   func resolve(_ result: Input?) {
-    if !isResultInitialized {
-      // Only update `self.result` by `resolve()` for the first time, after that `self.result` will be updated by each `then` block.
-      self.result = result
-      isResultInitialized = true
-    }
-
-    if !signalIfNeeded() {
-      // Call `then` with `self.result`.
-      //
-      // - Note: If `then()` returns a new result, update self's `result` - which will be used for the next `then()`.
-      self.result = thenClosure?(self.result)
-      // newPromise.execution(resolve, reject)
-    }
+    let nextInput = thenClosure?(result)
+    
+    // Call nextPromise.
+    nextPromise?.resolve(nextInput)
+    // nextPromise.execution(resolve, reject)
+    
+    //self.result = thenClosure?(self.result)
   }
   
   /// Function will be called on execution failure.
   func reject(_ error: Error?) {
-    if !signalIfNeeded() {
-      // Call `then` with `error`.
-      catchClosure?(error)
-    }
+    // Call `then` with `error`.
+    catchClosure?(error)
   }
 }
 
