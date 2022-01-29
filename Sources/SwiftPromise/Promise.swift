@@ -40,7 +40,8 @@ import Foundation
  }
  ```
  */
-public class Promise<Input> {
+public class Promise {
+  public typealias Input = Any
   public typealias Result = Any
   
   /// Resolve callback closure.
@@ -72,7 +73,7 @@ public class Promise<Input> {
   private var semaphore: DispatchSemaphore?
   
   private var externalInput: Input?
-  private var nextPromise: Promise<Any>?
+  private var nextPromise: Promise?
   
   public static var allPromisesSuccessString: String {
     return "Succeed to execute all promises."
@@ -86,7 +87,7 @@ public class Promise<Input> {
   
   /// `then` function that will be called on `resolve()`: `then()` returns Promise.
   @discardableResult
-  public func then<Output>(_ thenClosure: @escaping Then<Input, Promise<Output>>) -> Promise<Output> {
+  public func then(_ thenClosure: @escaping Then<Input, Promise>) -> Promise {
     // 1. Store `then`.
 //    self.thenClosure = { (input) in
 //      return thenClosure(input as! Input)
@@ -129,50 +130,10 @@ public class Promise<Input> {
 //
   /// `catch` function that will be called on `reject()`.
   @discardableResult
-  public func `catch`(_ catchClosure: @escaping Catch) -> Promise<Input> {
+  public func `catch`(_ catchClosure: @escaping Catch) -> Promise {
     self.catchClosure = catchClosure
     return self
   }
-  
-  /// Execute synchronously on the current thread and return result.
-  ///
-  /// - Note: preExecution shouldn't be on the same thread as `await()`, otherwise it will cause deadlock.
-  //  public func await() -> Result? {
-  //    // Start `preExecution`.
-  //    preExecution(resolve, reject)
-  //    // Wait on the current thread until get result or error.
-  //    waitForSignal()
-  //    return self.result
-  //  }
-  
-  /// Returns when all `promises` complete.
-  //  public static func all(_ promises: [Promise]) -> Promise<String> {
-  //    // 0. Create promise that executes all `promises`.
-  //    let allPromise = Promise<String> { (resolve, reject) in
-  //      let dispatchGroup = DispatchGroup()
-  //
-  //      // 1. Loop through all promises and execute.
-  //      for promise in promises {
-  //        dispatchGroup.enter()
-  //        promise.then { res in
-  //          dispatchGroup.leave()
-  //          return nil
-  //        }.catch { err in
-  //          // 2. Exit on any failure of promises
-  //          reject(err)
-  //          return
-  //        }
-  //      }
-  //
-  //      // 3. Notify after all `promises` complete.
-  //      dispatchGroup.notify(queue: .main) {
-  //        resolve(allPromisesSuccessString)
-  //      }
-  //    }
-  //
-  //    // 4. Return `allPromise`.
-  //    return allPromise
-  //  }
   
 }
 
@@ -199,21 +160,5 @@ private extension Promise {
   func reject(_ error: Error?) {
     // Call `then` with `error`.
     catchClosure?(error)
-  }
-}
-
-// MARK: - Signal
-
-private extension Promise {
-  func waitForSignal() {
-    semaphore = DispatchSemaphore(value: 0)
-    semaphore?.wait()
-  }
-  
-  func signalIfNeeded() -> Bool {
-    let shouldSendSignal = (semaphore != nil)
-    semaphore?.signal()
-    semaphore = nil
-    return shouldSendSignal
   }
 }
