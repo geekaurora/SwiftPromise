@@ -33,7 +33,7 @@ public class Promise {
   /// Semaphore for async/await signal.
   private var semaphore: DispatchSemaphore?
   
-  private var externalInput: Input?
+  private var prevThenResult: Input?
   private weak var rootPromise: Promise?
   private var nextPromise: Promise?
   
@@ -85,9 +85,9 @@ public class Promise {
 //    self.nextPromise = nextPromise as! Promise<Any>
 //
 //    // 2. Trigger preExecution.
-//    if self.externalInput != nil {
+//    if self.prevThenResult != nil {
 //      // Resolve automatically with previousResult: for non-first promise.
-//      resolve(self.externalInput)
+//      resolve(self.prevThenResult)
 //    } else {
 //      // Start pre-preExecution `preExecution`: the real preExecution will be when resolve() / reject() gets called.
 //      preExecution(resolve, reject)
@@ -138,16 +138,18 @@ public class Promise {
 
 private extension Promise {
   /// Function will be called on preExecution success.
-  func resolve(_ input: Input?) {
+  /// resolve(): completion with the current result.
+  func resolve(_ result: Input?) {
+    let nextResult = rootPromise?.prevThenResult ?? result
+    rootPromise?.prevThenResult = result
+    
     guard let nextThenClosure = rootPromise?.dequeNextThenClosures() else {
-      // If completes the last promise, then return.
       dbgPrintWithFunc(self, "Completed all promises! currPromiseIndex = \(currPromiseIndex), thenClosures.count = \(thenClosures.count)")
       return
     }
-    let nextInput = input
     
     // Set `nextInput` to `nextPromise`: generate `nextPromise` with `thenClosures` at `currPromiseIndex`.
-    nextPromise = nextThenClosure(nextInput)
+    nextPromise = nextThenClosure(nextResult)
     
     // Call nextPromise's preExecution: prepare.
     nextPromise?.preExecution(nextPromise!.resolve, nextPromise!.reject)
