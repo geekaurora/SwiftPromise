@@ -101,21 +101,17 @@ public class Promise {
 private extension Promise {
   /// Function will be called on preExecution success.
   func resolve(_ input: Input?) {
-    // Use `self.externalInput` if exists, otherwise use `input`.
-    // let nextInput = thenClosure?(self.externalInput ?? input)
     let nextInput = input
     
-    // Generate `nextPromise` with `thenClosures` at currPromiseIndex.
+    // Set `nextInput` to `nextPromise`: generate `nextPromise` with `thenClosures` at `currPromiseIndex`.
     nextPromise = thenClosures[currPromiseIndex](nextInput)
-    
-    // Set the input for `nextPromise`.
-    nextPromise?.externalInput = nextInput
+    currPromiseIndex += 1
     
     // Call nextPromise's preExecution: prepare.
     nextPromise?.preExecution(nextPromise!.resolve, nextPromise!.reject)
     
-    // No need to call nextPromise: will be called in `then()` of nextPromise.
-    // nextPromise?.resolve(nextInput)
+    // No need to call nextPromise: will be called by nextPromise itself.
+    // nextPromise?.resolve(nextInput)    
   }
   
   /// Function will be called on preExecution failure.
