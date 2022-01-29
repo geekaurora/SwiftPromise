@@ -19,7 +19,7 @@ final class SwiftPromiseTests: XCTestCase {
     
     promise
       .then { (result) -> Promise in
-        return Promise { (resolve, reject) in
+        return Promise(root: promise) { (resolve, reject) in
           XCTAssertTrue(result as! String == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
           
           // Call resolve() with the result for the next Promise

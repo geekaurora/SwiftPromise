@@ -47,6 +47,11 @@ public class Promise {
               _ preExecution: @escaping Execution) {
     self.rootPromise = rootPromise
     self.preExecution = preExecution
+    
+    if self.rootPromise == nil {
+      // Set `rootPromise` with self if it's nil, which will be held weak reference.
+      self.rootPromise = self
+    }
   }
   
   /// `thenClosure` that will be called by `resolve()`: `then()` returns Promise.
