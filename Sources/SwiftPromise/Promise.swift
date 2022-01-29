@@ -89,12 +89,12 @@ public class Promise<Input> {
   // Store `then`.
     self.thenClosure = thenClosure
     
-    // Start `execution`.
-    execution(resolve, reject)
+    // * Return new Promise: its `.then()` will be set externally.
+    nextPromise = Promise<Any> { (resolve, reject) in }
     
-    nextPromise = Promise<Any> { (resolve, reject) in
-      
-    }
+    // Start `execution`.
+    execution(resolve, reject)    
+
     return nextPromise!
     // return self
   }
