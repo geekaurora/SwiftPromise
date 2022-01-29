@@ -86,12 +86,13 @@ public class Promise<Input> {
   @discardableResult
   //public func then<Output>(_ thenClosure: @escaping Then<Input, Output>) -> Promise<Output> {
   public func then(_ thenClosure: @escaping Then<Input, Any>) -> Promise<Any> {
-    // Store `then`.
+    // 1. Store `then`.
     self.thenClosure = thenClosure
     
-    // * Return new Promise: its `.then()` will be set externally.
+    // * New Promise: its `.then()` will be set externally.
     nextPromise = Promise<Any> { (resolve, reject) in }
     
+    // 2. Trigger preExecution.
     if self.externalInput != nil {
       // Resolve automatically with previousResult: for non-first promise.
       resolve(self.externalInput)
@@ -100,6 +101,7 @@ public class Promise<Input> {
       preExecution(resolve, reject)
     }
     
+    // 3. Return new Promise.
     return nextPromise!
     // return self
   }
