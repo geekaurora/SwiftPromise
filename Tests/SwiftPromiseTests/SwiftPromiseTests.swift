@@ -15,47 +15,54 @@ final class SwiftPromiseTests: XCTestCase {
   func testResolve() {
     let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
     // Init promise.
-    let promise = createPromise()
-    // Test then().
-    promise.then { (result) -> String? in
-      XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
-      expectation.fulfill()
-      return nil
-    }
-    // Wait for asynchronous result.
-    waitExpectation()
-  }
-  /**
-   Test chaining multitple `then` - returns Promise.
-   */
-  func testChainingThenResolve() {
-    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
-    // Init promise.
     let promise = createPromise(shouldAsync: false)
-
-    // Test chaining then().
+    
     promise
       .then { (result) -> Promise<String> in
         return Promise<String> { (resolve, reject) in
-          print("First then")
           XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
           
           // Call resolve() with the result for the next Promise
           resolve(Self.firstThenPromiseResult)
           expectation.fulfill()
         }
-            
+        
       }
-    // * Note: next then() will call the same promise, as prev then() method returns `self`.
-//      .then { (result) -> String? in
-//        XCTAssertEqual(result as! String, Self.chainingThenPromiseResult)
-//        expectation.fulfill()
-//        return nil
-//      }
-
+    
     // Wait for asynchronous result.
     waitExpectation()
   }
+  
+  /**
+   Test chaining multitple `then` - returns Promise.
+   */
+//  func testChainingThenResolve() {
+//    let (waitExpectation, expectation) = CZTestUtils.waitWithInterval(Self.fulfillWaitInterval, testCase: self)
+//    // Init promise.
+//    let promise = createPromise(shouldAsync: false)
+//
+//    // Test chaining then().
+//    promise
+//      .then { (result) -> Promise<String> in
+//        return Promise<String> { (resolve, reject) in
+//          XCTAssertTrue(result == Self.result, "Actual result = \(result); Expected result = \(Self.result)")
+//
+//          // Call resolve() with the result for the next Promise
+//          resolve(Self.firstThenPromiseResult)
+//          expectation.fulfill()
+//        }
+//
+//      }
+//    // * Note: next then() will call the same promise, as prev then() method returns `self`.
+////      .then { (result) -> String? in
+////        XCTAssertEqual(result as! String, Self.chainingThenPromiseResult)
+////        expectation.fulfill()
+////        return nil
+////      }
+//
+//    // Wait for asynchronous result.
+//    waitExpectation()
+//  }
   
   
 //  /**
