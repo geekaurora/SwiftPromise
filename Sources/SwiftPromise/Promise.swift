@@ -47,7 +47,7 @@ public class Promise<Input> {
   public typealias Resolve = (Input?) -> Void
   /// Reject callback closure.
   public typealias Reject = (Error?) -> Void
-  /// Execution closure.
+  /// Execution closure: the real execution of Promise.
   public typealias Execution = (@escaping Resolve, @escaping Reject) -> Void
   private let execution: Execution
   
@@ -69,6 +69,7 @@ public class Promise<Input> {
   /// Semaphore for async/await signal.
   private var semaphore: DispatchSemaphore?
   
+  private var externalInput: Input?
   private var nextPromise: Promise<Any>?
   
   public static var allPromisesSuccessString: String {
@@ -91,10 +92,15 @@ public class Promise<Input> {
     
     // * Return new Promise: its `.then()` will be set externally.
     nextPromise = Promise<Any> { (resolve, reject) in }
-    
-    // Start `execution`.
-    execution(resolve, reject)    
 
+    if self.externalInput != nil {
+      // Resolve automatically with previousResult: for non-first promise.
+      resolve(self.externalInput)
+    } else {
+      // Start pre-execution `execution`: the real execution will be when resolve() / reject() gets called.
+      execution(resolve, reject)
+    }
+    
     return nextPromise!
     // return self
   }
@@ -152,11 +158,15 @@ public class Promise<Input> {
 
 private extension Promise {
   /// Function will be called on execution success.
-  func resolve(_ result: Input?) {
-    let nextInput = thenClosure?(result)
+  func resolve(_ input: Input?) {
+    // Use `self.externalInput` if exists, otherwise use `input`.
+    let nextInput = thenClosure?(self.externalInput ?? input)
     
-    // Call nextPromise.
-    nextPromise?.resolve(nextInput)
+    // Set the input for `nextPromise`.
+    nextPromise?.externalInput = nextInput
+    
+    // Call nextPromise: No need - will be called in `then()` of nextPromise.
+    // nextPromise?.resolve(nextInput)
     // nextPromise.execution(resolve, reject)
     
     //self.result = thenClosure?(self.result)
