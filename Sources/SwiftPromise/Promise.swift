@@ -30,9 +30,6 @@ public class Promise {
   public typealias Catch = (Error?) -> Void
   private var catchClosure: Catch?
   
-  /// Semaphore for async/await signal.
-  private var semaphore: DispatchSemaphore?
-  
   /// The root Promise that maintains the chaining then() closures.
   /// For async then() closures, we can’t return promise generated with `then(input)` in the current runloop, because `input` is unknown before executing the previous async promise.
   /// We only know`input` after the  prev async Promise resolves, so root Promise is needed to maintain and cache the chaining then() closures for generating promises later on.
@@ -139,7 +136,9 @@ private extension Promise {
     nextPromise = nextThenClosure(nextResult)
     
     // Call nextPromise's preExecution: prepare.
-    nextPromise?.preExecution(nextPromise!.resolve, nextPromise!.reject)
+    if let nextPromise = self.nextPromise {
+      nextPromise.preExecution(nextPromise.resolve, nextPromise.reject)
+    }
     
     // No need to call nextPromise's resolve(): it will be called by nextPromise itself.
     // nextPromise?.resolve(nextInput)    
